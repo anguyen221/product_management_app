@@ -79,8 +79,38 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   Future<void> _deleteProduct(String productId) async {
-    await _productService.deleteProduct(productId);
+    final bool? confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this product?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmDelete == true) {
+      await _productService.deleteProduct(productId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product deleted successfully!')),
+      );
+    }
   }
+
   Stream<List<Product>> _filterProducts() {
     return _productService.getProducts().map((products) {
       return products.where((product) {
@@ -95,11 +125,10 @@ class _ProductScreenState extends State<ProductScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Management'),
+        title: const Text('Product Management App'),
       ),
       body: Column(
         children: [
- 
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
