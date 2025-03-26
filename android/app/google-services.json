@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "826818377237",
+    "project_id": "product-management-app-80aad",
+    "storage_bucket": "product-management-app-80aad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:826818377237:android:d6586ed2ab11b58749c01c",
+        "android_client_info": {
+          "package_name": "com.example.product_management_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATqAr6VP8NFE2pFHxa3QKPsjdW4OkEtWM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
