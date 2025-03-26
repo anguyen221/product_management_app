@@ -13,6 +13,13 @@ class _ProductScreenState extends State<ProductScreen> {
   final ProductService _productService = ProductService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _minPriceController = TextEditingController();
+  final TextEditingController _maxPriceController = TextEditingController();
+
+  String _searchQuery = '';
+  double _minPrice = 0;
+  double _maxPrice = 9999.99;
 
   Future<void> _addOrUpdateProduct([Product? product]) async {
     String action = 'create';
@@ -74,53 +81,115 @@ class _ProductScreenState extends State<ProductScreen> {
   Future<void> _deleteProduct(String productId) async {
     await _productService.deleteProduct(productId);
   }
+  Stream<List<Product>> _filterProducts() {
+    return _productService.getProducts().map((products) {
+      return products.where((product) {
+        final matchesSearch = product.name.toLowerCase().contains(_searchQuery.toLowerCase());
+        final matchesPrice = product.price >= _minPrice && product.price <= _maxPrice;
+        return matchesSearch && matchesPrice;
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product Management App'),
+        title: const Text('Product Management'),
       ),
-      body: StreamBuilder<List<Product>>(
-        stream: _productService.getProducts(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No products available.'));
-          }
+      body: Column(
+        children: [
+ 
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: const InputDecoration(labelText: 'Search by Name'),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+            ),
+          ),
 
-          final products = snapshot.data!;
-          return ListView.builder(
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return Card(
-                margin: const EdgeInsets.all(10),
-                child: ListTile(
-                  title: Text(product.name),
-                  subtitle: Text('\$${product.price}'),
-                  trailing: SizedBox(
-                    width: 100,
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _addOrUpdateProduct(product),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () => _deleteProduct(product.id),
-                        ),
-                      ],
-                    ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _minPriceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Min Price'),
+                    onChanged: (value) {
+                      setState(() {
+                        _minPrice = double.tryParse(value) ?? 0;
+                      });
+                    },
                   ),
                 ),
-              );
-            },
-          );
-        },
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextField(
+                    controller: _maxPriceController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(labelText: 'Max Price'),
+                    onChanged: (value) {
+                      setState(() {
+                        _maxPrice = double.tryParse(value) ?? 9999.99;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: StreamBuilder<List<Product>>(
+              stream: _filterProducts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No products available.'));
+                }
+
+                final products = snapshot.data!;
+                return ListView.builder(
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return Card(
+                      margin: const EdgeInsets.all(10),
+                      child: ListTile(
+                        title: Text(product.name),
+                        subtitle: Text('\$${product.price}'),
+                        trailing: SizedBox(
+                          width: 100,
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => _addOrUpdateProduct(product),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete),
+                                onPressed: () => _deleteProduct(product.id),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrUpdateProduct(),
